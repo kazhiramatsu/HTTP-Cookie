@@ -102,10 +102,10 @@ subtest "should bake cookies" => sub {
     my $c = HTTP::Cookie->new(%{$COOKIES[0]});
     is $c->{num}->{value}, 'cookie';
 
-    while (my($name, $val) = each %{$c->cookies}) {
-        my $cookie = $c->bake($name, $val);
+    $c->bake(sub {
+        my $cookie = shift;
         is $cookie, "num=cookie";
-    }
+    });
 
     $c = HTTP::Cookie->new(%{$COOKIES[1]});
     is $c->{num}->{value}, 123456;
@@ -115,10 +115,10 @@ subtest "should bake cookies" => sub {
     is $c->{num}->{httponly}, 1;
     is $c->{num}->{secure}, 1;
 
-    while (my($name, $val) = each %{$c->cookies}) {
-        my $cookie = $c->bake($name, $val);
+    $c->bake(sub {
+        my $cookie = shift;
         is $cookie, "num=123456; domain=a.b.com; path=/foo/bar; expires=Thu, 07-Mar-2013 18:00:00 GMT; secure; HttpOnly";
-    }
+    });
 
     $c = HTTP::Cookie->new(%{$COOKIES[2]});
     is $c->{'!*\'();:@&=+$,/?%#[]'}->{value}, '!*\'();:@&=+$,/?%#[]';
@@ -127,10 +127,10 @@ subtest "should bake cookies" => sub {
     is $c->{'!*\'();:@&=+$,/?%#[]'}->{httponly}, 1;
     is $c->{'!*\'();:@&=+$,/?%#[]'}->{secure}, 1;
 
-    while (my($name, $val) = each %{$c->cookies}) {
-        my $cookie = $c->bake($name, $val);
+    $c->bake(sub {
+        my $cookie = shift;
         is $cookie, "%21%2A%27%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%25%23%5B%5D=%21%2A%27%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%25%23%5B%5D; path=/foo/bar; expires=Thu, 07-Mar-2013 18:01:00 GMT; secure; HttpOnly";
-    }
+    });
 
     $c = HTTP::Cookie->new(%{$COOKIES[3]});
     is $c->{num}->{value}, 123456;
@@ -143,14 +143,14 @@ subtest "should bake cookies" => sub {
     is $c->{val}->{domain}, 'a.c.com';
     is $c->{val}->{secure}, 1;
 
-    while (my($name, $val) = each %{$c->cookies}) {
-        my $cookie = $c->bake($name, $val);
-        if ($name eq 'num') {
+    $c->bake(sub {
+        my $cookie = shift;
+        if ($cookie =~ /^num=/) {
             is $cookie, "num=123456; path=/foo/bar; max-age=10; HttpOnly";
-        } elsif ($name eq 'val') {
+        } else {
             is $cookie, "val=67890; domain=a.c.com; path=/baz/woo; expires=Sat, 06-Apr-2013 18:00:00 GMT; secure";
         }
-    }
+    });
 };
 
 subtest "should bake cookies with expires" => sub {
@@ -191,10 +191,10 @@ subtest "should bake cookies with expires" => sub {
             }
         );
     
-        while (my($name, $val) = each %{$c->cookies}) {
-            my $cookie = $c->bake($name, $val);
+        $c->bake(sub {
+            my $cookie = shift;
             is $cookie, "num=123456; path=/HTTP/; expires=$FORMS{$form}; HttpOnly";
-        }
+        });
     }
 };
 
@@ -243,10 +243,10 @@ subtest "should bake cookies with max-age" => sub {
             }
         );
     
-        while (my($name, $val) = each %{$c->cookies}) {
-            my $cookie = $c->bake($name, $val);
+        $c->bake(sub {
+            my $cookie = shift;
             is $cookie, "num=123456; path=/HTTP/; max-age=$FORMS{$form}; HttpOnly";
-        }
+        });
     }
 };
 

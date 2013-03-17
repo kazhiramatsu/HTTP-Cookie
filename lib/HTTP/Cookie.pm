@@ -70,17 +70,22 @@ sub eat {
 }
 
 sub bake {
-    my ($self, $name, $val) = @_;
+    my ($self, $cb) = @_;
 
-    $val = { value => $val } unless ref $val eq 'HASH';
-    my @cookie = ( URI::Escape::uri_escape($name) . "=" . URI::Escape::uri_escape($val->{value}) );
-    push @cookie, "domain=" .  $val->{domain}    if $val->{domain};
-    push @cookie, "path=" .    $val->{path}      if $val->{path};
-    push @cookie, "expires=" . $val->{expires}   if defined $val->{expires};
-    push @cookie, "max-age=" . $val->{"max-age"} if defined $val->{"max-age"};
-    push @cookie, "secure"                       if $val->{secure};
-    push @cookie, "HttpOnly"                     if $val->{httponly};
-    my $cookie =  join "; ", @cookie;
+    croak("You must provide a argument with code ref") if ref $cb ne 'CODE';
+
+    while (my ($name, $val) = each %{$self->cookies}) {
+        $val = { value => $val } unless ref $val eq 'HASH';
+        my @cookie = ( URI::Escape::uri_escape($name) . "=" . URI::Escape::uri_escape($val->{value}) );
+        push @cookie, "domain=" .  $val->{domain}    if $val->{domain};
+        push @cookie, "path=" .    $val->{path}      if $val->{path};
+        push @cookie, "expires=" . $val->{expires}   if defined $val->{expires};
+        push @cookie, "max-age=" . $val->{"max-age"} if defined $val->{"max-age"};
+        push @cookie, "secure"                       if $val->{secure};
+        push @cookie, "HttpOnly"                     if $val->{httponly};
+        my $cookie =  join "; ", @cookie;
+        $cb->($cookie);
+    }
 }
 
 sub date {
